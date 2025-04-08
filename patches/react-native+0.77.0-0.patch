@@ -1,386 +1,172 @@
+diff --git a/node_modules/react-native/Libraries/Components/Touchable/TouchableOpacity.d.ts b/node_modules/react-native/Libraries/Components/Touchable/TouchableOpacity.d.ts
+index bd72669..e123da8 100644
+--- a/node_modules/react-native/Libraries/Components/Touchable/TouchableOpacity.d.ts
++++ b/node_modules/react-native/Libraries/Components/Touchable/TouchableOpacity.d.ts
+@@ -53,6 +53,11 @@ export interface TVProps {
+    * @platform android
+    */
+   nextFocusUp?: number | undefined;
++
++  onFocusStyle?: {
++    borderWidth?: number;
++    borderColor?: string;
++  } | undefined;
+ }
+ 
+ /**
 diff --git a/node_modules/react-native/Libraries/Components/Touchable/TouchableOpacity.js b/node_modules/react-native/Libraries/Components/Touchable/TouchableOpacity.js
-index 3fc5e44..fea8266 100644
+index 3fc5e44..9123232 100644
 --- a/node_modules/react-native/Libraries/Components/Touchable/TouchableOpacity.js
 +++ b/node_modules/react-native/Libraries/Components/Touchable/TouchableOpacity.js
-@@ -32,6 +32,7 @@ type TVProps = $ReadOnly<{|
+@@ -32,6 +32,10 @@ type TVProps = $ReadOnly<{|
    nextFocusLeft?: ?number,
    nextFocusRight?: ?number,
    nextFocusUp?: ?number,
-+  tvFocusBorderColor?: ?string,  // Add this line
++  onFocusStyle?: ?{
++    borderWidth?: number,
++    borderColor?: string
++  }
  |}>;
  
  type Props = $ReadOnly<{|
-@@ -220,6 +221,23 @@ class TouchableOpacity extends React.Component<Props, State> {
-     return typeof opacity === 'number' ? opacity : 1;
-   }
- 
-+  // Helper function to convert hex to rgb
-+  function hexToRgb(hex: string): ?{r: number, g: number, b: number} {
-+    console.log('Converting hex color:', hex);
-+    const result = /^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(hex);
-+    if (result) {
-+      const rgb = {
-+        r: parseInt(result[1], 16),
-+        g: parseInt(result[2], 16),
-+        b: parseInt(result[3], 16),
-+      };
-+      console.log('Converted to RGB:', rgb);
-+      return rgb;
-+    }
-+    console.log('Invalid hex color format');
-+    return null;
-+  }
-+
-   render(): React.Node {
-     // BACKWARD-COMPATIBILITY: Focus and blur events were never supported before
-     // adopting `Pressability`, so preserve that behavior.
-@@ -259,6 +277,22 @@ class TouchableOpacity extends React.Component<Props, State> {
- 
-     const accessibilityLabel =
-       this.props['aria-label'] ?? this.props.accessibilityLabel;
-+
-+    let style = [this.props.style, {opacity: this.state.anim}];
-+    
-+    // Add TV focus border when focused
-+    if (Platform.isTV && this.state.isFocused && this.props.tvFocusBorderColor) {
-+      console.log('TV focused, applying border color:', this.props.tvFocusBorderColor);
-+      const rgb = hexToRgb(this.props.tvFocusBorderColor);
-+      if (rgb) {
-+        style.push({
-+          borderWidth: 4,
-+          borderColor: `rgb(${rgb.r}, ${rgb.g}, ${rgb.b})`,
-+        });
-+        console.log('Applied border style:', style[style.length - 1]);
-+      }
-+    }
-+
-     return (
-       <Animated.View
-         accessible={this.props.accessible !== false}
-@@ -282,7 +316,7 @@ class TouchableOpacity extends React.Component<Props, State> {
-         accessibilityElementsHidden={
-           this.props['aria-hidden'] ?? this.props.accessibilityElementsHidden
-         }
--        style={[this.props.style, {opacity: this.state.anim}]}
-+        style={style}
-         nativeID={this.props.id ?? this.props.nativeID}
-         testID={this.props.testID}
-         onLayout={this.props.onLayout}
-@@ -296,6 +330,7 @@ class TouchableOpacity extends React.Component<Props, State> {
+@@ -292,6 +296,7 @@ class TouchableOpacity extends React.Component<Props, State> {
+         nextFocusRight={tagForComponentOrHandle(this.props.nextFocusRight)}
+         nextFocusUp={tagForComponentOrHandle(this.props.nextFocusUp)}
+         hasTVPreferredFocus={this.props.hasTVPreferredFocus === true}
++        onFocusStyle={this.props.onFocusStyle}
+         isTVSelectable={
            this.props.isTVSelectable !== false && this.props.accessible !== false
          }
-         tvParallaxProperties={this.props.tvParallaxProperties}
-+        tvFocusBorderColor={this.props.tvFocusBorderColor} 
-         hitSlop={this.props.hitSlop}
-         focusable={
-           this.props.focusable !== false &&
 diff --git a/node_modules/react-native/React/Views/RCTTVView.h b/node_modules/react-native/React/Views/RCTTVView.h
-index 3d73f92..f884118 100644
+index 3d73f92..a0bf16e 100644
 --- a/node_modules/react-native/React/Views/RCTTVView.h
 +++ b/node_modules/react-native/React/Views/RCTTVView.h
-@@ -5,93 +5,98 @@
-  * LICENSE file in the root directory of this source tree.
-  */
+@@ -93,5 +93,6 @@
+ - (void)requestTVFocus;
  
--#import <Foundation/Foundation.h>
--#import <UIKit/UIKit.h>
--
--#import <React/RCTView.h>
--#import <React/RCTBridge.h>
--#import <React/RCTTVRemoteSelectHandler.h>
--
--//  A RCTView with additional properties and methods for user interaction using the Apple TV focus engine.
--@interface RCTTVView : RCTView <RCTTVRemoteSelectHandlerDelegate>
--
--/**
-- * TV event handlers
-- */
--@property (nonatomic, assign) BOOL isTVSelectable; // True if this view is TV-focusable
--
--/**
-- *  Properties for Apple TV focus parallax effects
-- */
--@property (nonatomic, copy) NSDictionary *tvParallaxProperties;
--
--/**
-- * TV preferred focus
-- */
--@property (nonatomic, assign) BOOL hasTVPreferredFocus;
--
--/**
--  * Select and longSelect event handler
-- */
--@property (nonatomic, strong) RCTTVRemoteSelectHandler *tvRemoteSelectHandler;
--/**
-- * Focus direction tags
-- */
--@property (nonatomic, weak) RCTTVView * nextFocusUp;
--@property (nonatomic, weak) RCTTVView * nextFocusDown;
--@property (nonatomic, weak) RCTTVView * nextFocusLeft;
--@property (nonatomic, weak) RCTTVView * nextFocusRight;
--
--@property (nonatomic, strong) UIFocusGuide * focusGuideUp;
--@property (nonatomic, strong) UIFocusGuide * focusGuideDown;
--@property (nonatomic, strong) UIFocusGuide * focusGuideLeft;
--@property (nonatomic, strong) UIFocusGuide * focusGuideRight;
--
--/**
-- * Auto focus
-- */
--@property (nonatomic, assign) BOOL autoFocus;
--
--@property (nonatomic, assign) BOOL trapFocusUp;
--@property (nonatomic, assign) BOOL trapFocusDown;
--@property (nonatomic, assign) BOOL trapFocusLeft;
--@property (nonatomic, assign) BOOL trapFocusRight;
--
--// These handlers are defined in RCTView
--/*
--@property (nonatomic, copy) RCTBubblingEventBlock onFocus;
--@property (nonatomic, copy) RCTBubblingEventBlock onBlur;
--@property (nonatomic, copy) RCTDirectEventBlock onPressIn;
--@property (nonatomic, copy) RCTDirectEventBlock onPressOut;
-- */
--
--- (instancetype)initWithBridge:(RCTBridge *)bridge;
--
--/**
-- * Send Focus Notifications to listeners
-- */
--- (void)sendFocusNotification:(UIFocusUpdateContext *)context;
--
--/**
-- * Send Blur Notifications to listeners
-- */
--- (void)sendBlurNotification:(UIFocusUpdateContext *)context;
--
--/**
-- * Adds Parallax Motion Effects if tvParallaxProperty is enabled
-- */
--- (void)addParallaxMotionEffects;
--
--/**
-- * Removes Parallax Motion Effects if tvParallaxProperty is enabled
-- */
--- (void)removeParallaxMotionEffects;
--
--
--- (void)setFocusDestinations:(NSArray*)destinations;
--
--- (void)requestTVFocus;
--
--@property (nonatomic, strong) UIFocusGuide * focusGuide;
--
--@end
-+ #import <Foundation/Foundation.h>
-+ #import <UIKit/UIKit.h>
-+ 
-+ #import <React/RCTView.h>
-+ #import <React/RCTBridge.h>
-+ #import <React/RCTTVRemoteSelectHandler.h>
-+ 
-+ //  A RCTView with additional properties and methods for user interaction using the Apple TV focus engine.
-+ @interface RCTTVView : RCTView <RCTTVRemoteSelectHandlerDelegate>
-+ 
-+ /**
-+  * TV event handlers
-+  */
-+ @property (nonatomic, assign) BOOL isTVSelectable; // True if this view is TV-focusable
-+ 
-+ /**
-+  *  Properties for Apple TV focus parallax effects
-+  */
-+ @property (nonatomic, copy) NSDictionary *tvParallaxProperties;
-+ 
-+ /**
-+  * TV preferred focus
-+  */
-+ @property (nonatomic, assign) BOOL hasTVPreferredFocus;
-+ 
-+ /**
-+  * Custom focus border color
-+  */
-+ @property (nonatomic, copy) UIColor *tvFocusBorderColor; // Add this line
-+ 
-+ /**
-+   * Select and longSelect event handler
-+  */
-+ @property (nonatomic, strong) RCTTVRemoteSelectHandler *tvRemoteSelectHandler;
-+ /**
-+  * Focus direction tags
-+  */
-+ @property (nonatomic, weak) RCTTVView * nextFocusUp;
-+ @property (nonatomic, weak) RCTTVView * nextFocusDown;
-+ @property (nonatomic, weak) RCTTVView * nextFocusLeft;
-+ @property (nonatomic, weak) RCTTVView * nextFocusRight;
-+ 
-+ @property (nonatomic, strong) UIFocusGuide * focusGuideUp;
-+ @property (nonatomic, strong) UIFocusGuide * focusGuideDown;
-+ @property (nonatomic, strong) UIFocusGuide * focusGuideLeft;
-+ @property (nonatomic, strong) UIFocusGuide * focusGuideRight;
-+ 
-+ /**
-+  * Auto focus
-+  */
-+ @property (nonatomic, assign) BOOL autoFocus;
-+ 
-+ @property (nonatomic, assign) BOOL trapFocusUp;
-+ @property (nonatomic, assign) BOOL trapFocusDown;
-+ @property (nonatomic, assign) BOOL trapFocusLeft;
-+ @property (nonatomic, assign) BOOL trapFocusRight;
-+ 
-+ // These handlers are defined in RCTView
-+ /*
-+ @property (nonatomic, copy) RCTBubblingEventBlock onFocus;
-+ @property (nonatomic, copy) RCTBubblingEventBlock onBlur;
-+ @property (nonatomic, copy) RCTDirectEventBlock onPressIn;
-+ @property (nonatomic, copy) RCTDirectEventBlock onPressOut;
-+  */
-+ 
-+ - (instancetype)initWithBridge:(RCTBridge *)bridge;
-+ 
-+ /**
-+  * Send Focus Notifications to listeners
-+  */
-+ - (void)sendFocusNotification:(UIFocusUpdateContext *)context;
-+ 
-+ /**
-+  * Send Blur Notifications to listeners
-+  */
-+ - (void)sendBlurNotification:(UIFocusUpdateContext *)context;
-+ 
-+ /**
-+  * Adds Parallax Motion Effects if tvParallaxProperty is enabled
-+  */
-+ - (void)addParallaxMotionEffects;
-+ 
-+ /**
-+  * Removes Parallax Motion Effects if tvParallaxProperty is enabled
-+  */
-+ - (void)removeParallaxMotionEffects;
-+ 
-+ 
-+ - (void)setFocusDestinations:(NSArray*)destinations;
-+ 
-+ - (void)requestTVFocus;
-+ 
-+ @property (nonatomic, strong) UIFocusGuide * focusGuide;
-+ 
-+ @end
-\ No newline at end of file
+ @property (nonatomic, strong) UIFocusGuide * focusGuide;
++@property (nonatomic, copy) NSDictionary *onFocusStyle;
+ 
+ @end
 diff --git a/node_modules/react-native/React/Views/RCTTVView.m b/node_modules/react-native/React/Views/RCTTVView.m
-index 47d44c7..1727ccf 100644
+index 47d44c7..d6dd27e 100644
 --- a/node_modules/react-native/React/Views/RCTTVView.m
 +++ b/node_modules/react-native/React/Views/RCTTVView.m
-@@ -25,7 +25,6 @@ @implementation RCTTVView {
-   BOOL motionEffectsAdded;
-   NSArray* focusDestinations;
-   id<UIFocusItem> previouslyFocusedItem;
--  
+@@ -287,39 +287,77 @@ - (BOOL)shouldUpdateFocusInContext:(UIFocusUpdateContext *)context
+   return [super shouldUpdateFocusInContext:context];
  }
  
- - (instancetype)initWithBridge:(RCTBridge *)bridge {
-@@ -53,6 +52,28 @@ - (instancetype)initWithBridge:(RCTBridge *)bridge {
- static NSDictionary *defaultTVParallaxProperties = nil;
- static dispatch_once_t onceToken;
- 
-+- (void)setTvFocusBorderColor:(UIColor *)tvFocusBorderColor {
-+  _tvFocusBorderColor = tvFocusBorderColor;
-+  if (self.isFocused) {
-+    self.layer.borderColor = tvFocusBorderColor.CGColor;
-+  }
-+}
-+
-+- (UIColor *)colorWithHexString:(NSString *)hexString {
-+    NSLog(@"Converting hex color: %@", hexString);
++//helper method to transform from hex to rgb values
++- (UIColor *)colorFromHexString:(NSString *)hexString {
++    NSLog(@"Converting Hex: %@", hexString); // Debug 1
 +    unsigned rgbValue = 0;
 +    NSScanner *scanner = [NSScanner scannerWithString:hexString];
-+    [scanner setScanLocation:1]; // skip '#' character
++    [scanner setScanLocation:1]; // Skip '#'
 +    [scanner scanHexInt:&rgbValue];
-+
-+    CGFloat red = ((rgbValue & 0xFF0000) >> 16) / 255.0;
-+    CGFloat green = ((rgbValue & 0xFF00) >> 8) / 255.0;
-+    CGFloat blue = (rgbValue & 0xFF) / 255.0;
-+
-+    NSLog(@"Converted to RGB: R:%.2f G:%.2f B:%.2f", red, green, blue);
-+    return [UIColor colorWithRed:red green:green blue:blue alpha:1.0];
++    UIColor *color = [UIColor colorWithRed:((rgbValue & 0xFF0000) >> 16)/255.0 
++                         green:((rgbValue & 0xFF00) >> 8)/255.0 
++                          blue:(rgbValue & 0xFF)/255.0 
++                         alpha:1.0];
++    NSLog(@"Converted to RGB: %@", color); // Debug 2
++    return color;
 +}
 +
- - (void)setTvParallaxProperties:(NSDictionary *)tvParallaxProperties
+ - (void)didUpdateFocusInContext:(UIFocusUpdateContext *)context
+        withAnimationCoordinator:(UIFocusAnimationCoordinator *)coordinator
  {
-   if (_tvParallaxProperties == nil) {
-@@ -69,6 +90,7 @@ - (void)setTvParallaxProperties:(NSDictionary *)tvParallaxProperties
-   _tvParallaxProperties = [newParallaxProperties copy];
- }
- 
-+
- RCT_NOT_IMPLEMENTED(-(instancetype)initWithCoder : unused)
- 
- - (void)setIsTVSelectable:(BOOL)isTVSelectable
-@@ -295,10 +317,6 @@ - (void)didUpdateFocusInContext:(UIFocusUpdateContext *)context
-   }
+-  if (context.previouslyFocusedView == context.nextFocusedView) {
+-    return;
+-  }
++    if (context.previouslyFocusedView == context.nextFocusedView) {
++        return;
++    }
      
-   if (_autoFocus && self.focusGuide != nil && context.previouslyFocusedItem != nil) {
+-  if (_autoFocus && self.focusGuide != nil && context.previouslyFocusedItem != nil) {
 -    // Whenever focus leaves the container, `nextFocusedView` is the destination, the item outside the container.
 -    // So, `previouslyFocusedItem` is always the last focused child of `TVFocusGuide`.
 -    // We should update `preferredFocusEnvironments` in this case to make sure `FocusGuide` remembers
 -    // the last focused element and redirects the focus to it whenever focus comes back.
-     previouslyFocusedItem = context.previouslyFocusedItem;
-     [self handleFocusGuide];
-   }
-@@ -310,6 +328,15 @@ - (void)didUpdateFocusInContext:(UIFocusUpdateContext *)context
-     [coordinator addCoordinatedAnimations:^(void){
-       [self addParallaxMotionEffects];
-       [self sendFocusNotification:context];
-+      
-+      // Apply focus border color if specified
-+      if (self.tvFocusBorderColor) {
-+        NSLog(@"Applying focus border color: %@", self.tvFocusBorderColor);
-+        self.layer.borderWidth = 4.0;
-+        self.layer.borderColor = self.tvFocusBorderColor.CGColor;
-+      } else {
-+        NSLog(@"No focus border color specified");
-+      }
-     } completion:^(void){}];
-   } else {
-     if (self.onBlur) self.onBlur(nil);
-@@ -317,11 +344,19 @@ - (void)didUpdateFocusInContext:(UIFocusUpdateContext *)context
-     [coordinator addCoordinatedAnimations:^(void){
-       [self sendBlurNotification:context];
-       [self removeParallaxMotionEffects];
-+      
-+      //only reset border if focus border was used
-+      if (self.tvFocusBorderColor) {
-+        NSLog(@"Removing focus border color");
-+        self.layer.borderColor = [UIColor clearColor].CGColor;
-+        self.layer.borderWidth = 0;
-+      }
-     } completion:^(void){}];
-     [self resignFirstResponder];
-   }
+-    previouslyFocusedItem = context.previouslyFocusedItem;
+-    [self handleFocusGuide];
+-  }
++    if (_autoFocus && self.focusGuide != nil && context.previouslyFocusedItem != nil) {
++        previouslyFocusedItem = context.previouslyFocusedItem;
++        [self handleFocusGuide];
++    }
+     
+-  if (context.nextFocusedView == self && ![self isTVFocusGuide] && self.isTVSelectable ) {
+-    if (self.onFocus) self.onFocus(nil);
+-    [self becomeFirstResponder];
+-    [self enableDirectionalFocusGuides];
+-    [coordinator addCoordinatedAnimations:^(void){
+-      [self addParallaxMotionEffects];
+-      [self sendFocusNotification:context];
+-    } completion:^(void){}];
+-  } else {
+-    if (self.onBlur) self.onBlur(nil);
+-    [self disableDirectionalFocusGuides];
+-    [coordinator addCoordinatedAnimations:^(void){
+-      [self sendBlurNotification:context];
+-      [self removeParallaxMotionEffects];
+-    } completion:^(void){}];
+-    [self resignFirstResponder];
+-  }
++    if (context.nextFocusedView == self && ![self isTVFocusGuide] && self.isTVSelectable) {
++        NSLog(@"Applying Focus Style: %@", self.onFocusStyle); // Debug 3
++        if (self.onFocus) self.onFocus(nil);
++        [self becomeFirstResponder];
++        [self enableDirectionalFocusGuides];
++        
++        [coordinator addCoordinatedAnimations:^{
++            [self addParallaxMotionEffects];
++            [self sendFocusNotification:context];
++            
++            // Focus style handler
++            if (self.onFocusStyle) {
++                // Handle border width
++                CGFloat borderWidth = [self.onFocusStyle[@"borderWidth"] floatValue];
++                if (!isnan(borderWidth)) {
++                    self.layer.borderWidth = borderWidth;
++                }
++                
++                // Handle border color
++                NSString *borderColor = self.onFocusStyle[@"borderColor"];
++                if ([borderColor isKindOfClass:[NSString class]]) {
++                    self.layer.borderColor = [self colorFromHexString:borderColor].CGColor;
++                }
++                NSLog(@"Border Width: %f, Color: %@", borderWidth, borderColor); // Debug 4
++                // Maintain existing corner radius
++                self.layer.cornerRadius = self.layer.cornerRadius;
++            }
++        } completion:nil];
++    } else {
++        if (self.onBlur) self.onBlur(nil);
++        [self disableDirectionalFocusGuides];
++        
++        [coordinator addCoordinatedAnimations:^{
++            [self sendBlurNotification:context];
++            [self removeParallaxMotionEffects];
++            
++            // CLEAR FOCUS STYLES WHEN LOSING FOCUS
++            if (self.onFocusStyle) {
++                self.layer.borderWidth = 0;
++            }
++        } completion:nil];
++        
++        [self resignFirstResponder];
++    }
  }
  
-+
  // In tvOS, to support directional focus APIs, we add a UIFocusGuide for each
- // side of the view where a nextFocus has been set. Set layout constraints to
- // make the guide 1 px thick, and set the destination to the nextFocus object.
-@@ -498,6 +533,7 @@ - (void)setHasTVPreferredFocus:(BOOL)hasTVPreferredFocus
-   [self setPreferredFocus:hasTVPreferredFocus];
- }
- 
-+
- - (void)setAutoFocus:(BOOL)autoFocus
- {
-   if (_autoFocus != autoFocus) {
 diff --git a/node_modules/react-native/React/Views/RCTViewManager.m b/node_modules/react-native/React/Views/RCTViewManager.m
-index 6faafee..8179322 100644
+index 6faafee..66f680d 100644
 --- a/node_modules/react-native/React/Views/RCTViewManager.m
 +++ b/node_modules/react-native/React/Views/RCTViewManager.m
-@@ -186,6 +186,7 @@ - (RCTShadowView *)shadowView
+@@ -185,6 +185,7 @@ - (RCTShadowView *)shadowView
+ 
  #if TARGET_OS_TV
  // TODO: Delete props for Apple TV.
++RCT_EXPORT_VIEW_PROPERTY(onFocusStyle, NSDictionary)
  RCT_EXPORT_VIEW_PROPERTY(isTVSelectable, BOOL)
-+RCT_EXPORT_VIEW_PROPERTY(tvFocusBorderColor, UIColor)
  RCT_EXPORT_VIEW_PROPERTY(hasTVPreferredFocus, BOOL)
  RCT_EXPORT_VIEW_PROPERTY(tvParallaxProperties, NSDictionary)
- RCT_EXPORT_VIEW_PROPERTY(nextFocusUp, NSNumber)

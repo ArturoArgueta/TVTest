@@ -1,5 +1,5 @@
 import React from 'react';
-import { ImageRequireSource } from 'react-native';
+import { ImageRequireSource, Touchable, TouchableOpacity } from 'react-native';
 import { CardImage, CardImageProps, CardWrapper } from './styles';
 import { Source } from 'react-native-fast-image';
 import { useTVFocus } from '../../../hooks/useTVFocus';
@@ -25,12 +25,16 @@ const CarouselCard: React.FC<CarouselCardProps> = ({
     const theme = useTheme();
 
     return (
-        <CardWrapper
+        <TouchableOpacity
             {...focusProps}
             onPress={onPress}
             hasTVPreferredFocus={hasTVPreferredFocus}
-            tvFocusBorderColor={tvFocusBorderColor || theme.colors.foreground0}
             activeOpacity={0.6}
+            onFocusStyle={{
+                borderWidth: 4,
+                borderColor: "#FFFF"
+            }
+            }
         >
             <CardImage
                 aspectRatio={aspectRatio}
@@ -38,7 +42,7 @@ const CarouselCard: React.FC<CarouselCardProps> = ({
                 height={height}
                 source={image_src}
             />
-        </CardWrapper>
+        </TouchableOpacity>
     );
 };
 
