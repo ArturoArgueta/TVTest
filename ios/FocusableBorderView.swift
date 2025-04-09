@@ -52,7 +52,23 @@ class FocusableBorderHostingView: UIView {
     @objc var focusAnimationDuration: NSNumber = 200 {
         didSet { /* Convert from milliseconds to seconds if needed */ }
     }
-
+    
+    override func reactSetFrame(_ frame: CGRect) {
+          super.reactSetFrame(frame)
+          // Ensure the content view matches the new frame
+          contentView?.frame = bounds
+      }
+      
+    @objc func reactCleanup() {
+          // Called when React Native is about to recycle this view
+          _isFocused = false
+          layer.borderWidth = 0
+          layer.borderColor = UIColor.clear.cgColor
+          
+          // Remove all subviews
+          reactSubviews.forEach { $0.removeFromSuperview() }
+          reactSubviews.removeAll()
+      }
       // Event handlers
       @objc var onPress: RCTBubblingEventBlock?
       @objc var onFocus: RCTBubblingEventBlock?
