@@ -1,40 +1,45 @@
 import React from 'react';
-import { ImageRequireSource, Touchable, TouchableOpacity } from 'react-native';
-import { CardImage, CardImageProps, CardWrapper } from './styles';
+import { ImageRequireSource, TouchableOpacity } from 'react-native';
+import { CardImage } from './styles';
 import { Source } from 'react-native-fast-image';
 import { useTVFocus } from '../../../hooks/useTVFocus';
 import { useTheme } from '@emotion/react';
+import { TVFocusBorder } from '../TVFocusBorder';
 
-export interface CarouselCardProps extends CardImageProps {
+interface CarouselCardProps {
     image_src: number | Source | ImageRequireSource;
     onPress?: () => void;
     hasTVPreferredFocus?: boolean;
-    tvFocusBorderColor?: string;
-}
-
-const CarouselCard: React.FC<CarouselCardProps> = ({
+    focusBorderColor?: string;
+    aspectRatio: number;
+    width: number ;
+    height?: number;
+  }
+  
+  const CarouselCard: React.FC<CarouselCardProps> = ({
     aspectRatio,
     width,
     height,
     image_src,
     onPress,
     hasTVPreferredFocus = false,
-    tvFocusBorderColor
-}) => {
-    const { focusProps } = useTVFocus();
+    focusBorderColor = '#FFFFFF',
+  }) => {
+    const { isFocused, focusProps } = useTVFocus(hasTVPreferredFocus);
     const theme = useTheme();
-
+  
     return (
-        <TouchableOpacity
-            {...focusProps}
-            onPress={onPress}
-            hasTVPreferredFocus={hasTVPreferredFocus}
-            activeOpacity={0.6}
-            onFocusStyle={{
-                borderWidth: 4,
-                borderColor: "#FFFF"
-            }
-            }
+      <TouchableOpacity
+        onPress={onPress}
+        activeOpacity={0.6}
+        style={{ width, aspectRatio, height }}
+      >
+        <TVFocusBorder
+          {...focusProps}
+          borderColor={isFocused ? focusBorderColor : 'transparent'}
+          borderWidth={isFocused ? 3 : 0}
+          cornerRadius={theme.sizes.md}
+          style={{ width: '100%', height: '100%' }}
         >
             <CardImage
                 aspectRatio={aspectRatio}
@@ -42,8 +47,10 @@ const CarouselCard: React.FC<CarouselCardProps> = ({
                 height={height}
                 source={image_src}
             />
+
+        </TVFocusBorder>
         </TouchableOpacity>
     );
-};
-
-export default CarouselCard;
+  };
+  
+  export default CarouselCard;

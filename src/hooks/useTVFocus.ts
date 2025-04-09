@@ -1,7 +1,7 @@
 import { useCallback, useState } from 'react';
 
-export const useTVFocus = () => {
-    const [isFocused, setIsFocused] = useState(false);
+export const useTVFocus = (initialFocus = false) => {
+    const [isFocused, setIsFocused] = useState(initialFocus);
 
     const handleFocus = useCallback(() => {
         setIsFocused(true);
@@ -16,8 +16,8 @@ export const useTVFocus = () => {
         focusProps: {
             onFocus: handleFocus,
             onBlur: handleBlur,
-            hasTVPreferredFocus: false,
+            hasTVPreferredFocus: initialFocus,
             isTVSelectable: true,
         }
     };
-}; 
+};

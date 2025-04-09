@@ -11,6 +11,8 @@
 		13B07FBF1A68108700A75B9A /* Images.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 13B07FB51A68108700A75B9A /* Images.xcassets */; };
 		1B1AB8A27A6CBA15FA1A6ACE /* PrivacyInfo.xcprivacy in Resources */ = {isa = PBXBuildFile; fileRef = 13B07FB81A68108700A75B9A /* PrivacyInfo.xcprivacy */; };
 		761780ED2CA45674006654EE /* AppDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = 761780EC2CA45674006654EE /* AppDelegate.swift */; };
+		7FA521D92DA5EFEA0001A7E4 /* FocusableBorderView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7FA521D82DA5EFEA0001A7E4 /* FocusableBorderView.swift */; };
+		7FA521DE2DA5F0A30001A7E4 /* FocusableBorderViewManager.m in Sources */ = {isa = PBXBuildFile; fileRef = 7FA521DD2DA5F0A30001A7E4 /* FocusableBorderViewManager.m */; };
 		81AB9BB82411601600AC10FF /* LaunchScreen.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = 81AB9BB72411601600AC10FF /* LaunchScreen.storyboard */; };
 /* End PBXBuildFile section */
 
@@ -23,11 +25,11 @@
 		5709B34CF0A7D63546082F79 /* Pods-TVTest.release.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-TVTest.release.xcconfig"; path = "Target Support Files/Pods-TVTest/Pods-TVTest.release.xcconfig"; sourceTree = "<group>"; };
 		5DCACB8F33CDC322A6C60F78 /* libPods-TVTest.a */ = {isa = PBXFileReference; explicitFileType = archive.ar; includeInIndex = 0; path = "libPods-TVTest.a"; sourceTree = BUILT_PRODUCTS_DIR; };
 		761780EC2CA45674006654EE /* AppDelegate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = AppDelegate.swift; path = TVTest/AppDelegate.swift; sourceTree = "<group>"; };
+		7FA521D82DA5EFEA0001A7E4 /* FocusableBorderView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FocusableBorderView.swift; sourceTree = "<group>"; };
+		7FA521DA2DA5F0440001A7E4 /* FocusableBorderView-Bridging-Header.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = "FocusableBorderView-Bridging-Header.h"; sourceTree = "<group>"; };
+		7FA521DD2DA5F0A30001A7E4 /* FocusableBorderViewManager.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; name = FocusableBorderViewManager.m; path = TVTest/FocusableBorderViewManager.m; sourceTree = "<group>"; };
 		81AB9BB72411601600AC10FF /* LaunchScreen.storyboard */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = file.storyboard; name = LaunchScreen.storyboard; path = TVTest/LaunchScreen.storyboard; sourceTree = "<group>"; };
 		ED297162215061F000B7C4FE /* JavaScriptCore.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = JavaScriptCore.framework; path = System/Library/Frameworks/JavaScriptCore.framework; sourceTree = SDKROOT; };
-		XXXXXX1 /* TVFocusManager.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; name = TVFocusManager.h; path = TVTest/TVFocusManager.h; sourceTree = "<group>"; };
-		XXXXXX2 /* TVFocusManager.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; name = TVFocusManager.m; path = TVTest/TVFocusManager.m; sourceTree = "<group>"; };
-		XXXXXX3 /* TVTest-Bridging-Header.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; name = "TVTest-Bridging-Header.h"; path = "TVTest/TVTest-Bridging-Header.h"; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -50,9 +52,9 @@
 				13B07FB61A68108700A75B9A /* Info.plist */,
 				81AB9BB72411601600AC10FF /* LaunchScreen.storyboard */,
 				13B07FB81A68108700A75B9A /* PrivacyInfo.xcprivacy */,
-				XXXXXX1 /* TVFocusManager.h */,
-				XXXXXX2 /* TVFocusManager.m */,
-				XXXXXX3 /* TVTest-Bridging-Header.h */,
+				7FA521D82DA5EFEA0001A7E4 /* FocusableBorderView.swift */,
+				7FA521DA2DA5F0440001A7E4 /* FocusableBorderView-Bridging-Header.h */,
+				7FA521DD2DA5F0A30001A7E4 /* FocusableBorderViewManager.m */,
 			);
 			name = TVTest;
 			sourceTree = "<group>";
@@ -137,7 +139,7 @@
 				LastUpgradeCheck = 1210;
 				TargetAttributes = {
 					13B07F861A680F5B00A75B9A = {
-						LastSwiftMigration = 1120;
+						LastSwiftMigration = 1610;
 					};
 				};
 			};
@@ -253,6 +255,8 @@
 			buildActionMask = 2147483647;
 			files = (
 				761780ED2CA45674006654EE /* AppDelegate.swift in Sources */,
+				7FA521D92DA5EFEA0001A7E4 /* FocusableBorderView.swift in Sources */,
+				7FA521DE2DA5F0A30001A7E4 /* FocusableBorderViewManager.m in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -280,6 +284,7 @@
 				);
 				PRODUCT_BUNDLE_IDENTIFIER = "org.reactjs.native.example.$(PRODUCT_NAME:rfc1034identifier)";
 				PRODUCT_NAME = TVTest;
+				SWIFT_OBJC_BRIDGING_HEADER = "FocusableBorderView-Bridging-Header.h";
 				SWIFT_OPTIMIZATION_LEVEL = "-Onone";
 				SWIFT_VERSION = 5.0;
 				TVOS_DEPLOYMENT_TARGET = 15.1;
@@ -307,6 +312,7 @@
 				);
 				PRODUCT_BUNDLE_IDENTIFIER = "org.reactjs.native.example.$(PRODUCT_NAME:rfc1034identifier)";
 				PRODUCT_NAME = TVTest;
+				SWIFT_OBJC_BRIDGING_HEADER = "FocusableBorderView-Bridging-Header.h";
 				SWIFT_VERSION = 5.0;
 				TVOS_DEPLOYMENT_TARGET = 15.1;
 				VERSIONING_SYSTEM = "apple-generic";
