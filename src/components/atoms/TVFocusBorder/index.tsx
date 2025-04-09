@@ -12,6 +12,14 @@ type TVFocusBorderProps = {
   onBlur?: (event: NativeSyntheticEvent<null>) => void;
   onPress?: (event: NativeSyntheticEvent<null>) => void;
   focusAnimationDuration?: number;
+  isTVSelectable?: boolean;
+  tvParallaxProperties?: {
+    enabled?: boolean;
+    shiftDistanceX?: number;
+    shiftDistanceY?: number;
+    tiltAngle?: number;
+    magnification?: number;
+  };
 };
 
 const NativeTVFocusBorder = requireNativeComponent<TVFocusBorderProps>(

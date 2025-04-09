@@ -52,14 +52,22 @@ class FocusableBorderHostingView: UIView {
     @objc var focusAnimationDuration: NSNumber = 200 {
         didSet { /* Convert from milliseconds to seconds if needed */ }
     }
-    
-    @objc var onPress: RCTBubblingEventBlock?
-    @objc var onFocus: RCTBubblingEventBlock?
-    @objc var onBlur: RCTBubblingEventBlock?
-    @objc var hasTVPreferredFocus: Bool = false
+
+      // Event handlers
+      @objc var onPress: RCTBubblingEventBlock?
+      @objc var onFocus: RCTBubblingEventBlock?
+      @objc var onBlur: RCTBubblingEventBlock?
+      
+      // TV-specific properties
+      @objc var hasTVPreferredFocus: Bool = false
+      @objc var isTVSelectable: Bool = true
+      @objc var tvParallaxProperties: NSDictionary?
     
     private var _isFocused: Bool = false
-    
+  
+    override var canBecomeFocused: Bool {
+          return isTVSelectable
+      }
     override init(frame: CGRect) {
         super.init(frame: frame)
         setupView()
@@ -101,28 +109,24 @@ class FocusableBorderHostingView: UIView {
     }
     
     @objc private func handleTap() {
-        onPress?(["target": reactTag])
+        onPress?(["target": reactTag as Any])
     }
     
-    override var canBecomeFocused: Bool {
-        return true
-    }
-    
-    override func didUpdateFocus(in context: UIFocusUpdateContext, with coordinator: UIFocusAnimationCoordinator) {
-        if context.nextFocusedView == self {
-            _isFocused = true
-            coordinator.addCoordinatedAnimations({
-                self.applyFocusStyle()
-            }, completion: nil)
-            onFocus?(["target": reactTag])
-        } else if context.previouslyFocusedView == self {
-            _isFocused = false
-            coordinator.addCoordinatedAnimations({
-                self.clearFocusStyle()
-            }, completion: nil)
-            onBlur?(["target": reactTag])
-        }
-    }
+  override func didUpdateFocus(in context: UIFocusUpdateContext, with coordinator: UIFocusAnimationCoordinator) {
+      if context.nextFocusedView == self {
+          _isFocused = true
+          coordinator.addCoordinatedAnimations({
+              self.applyFocusStyle()
+          }, completion: nil)
+          onFocus?(["target": reactTag as Any])
+      } else if context.previouslyFocusedView == self {
+          _isFocused = false
+          coordinator.addCoordinatedAnimations({
+              self.clearFocusStyle()
+          }, completion: nil)
+          onBlur?(["target": reactTag as Any])
+      }
+  }
     
     private func applyFocusStyle() {
         UIView.animate(withDuration: TimeInterval(focusAnimationDuration.floatValue / 1000)) {
