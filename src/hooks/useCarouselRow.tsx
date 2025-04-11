@@ -1,7 +1,7 @@
 import React from 'react';
 import { useCallback } from 'react';
 import { CarouselContainer, CarouselResource } from '../interfaces';
-import { ListRenderItem } from 'react-native';
+import { ListRenderItem } from '@shopify/flash-list';
 import { CarouselCard } from '../components';
 import styled from '@emotion/native';
 import { useNavigation } from '@react-navigation/native';
