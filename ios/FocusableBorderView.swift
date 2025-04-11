@@ -1,5 +1,4 @@
 import UIKit
-import React
 
 extension UIColor {
     convenience init(hex: String) {
@@ -24,151 +23,88 @@ extension UIColor {
 
 @objc(FocusableBorderViewManager)
 class FocusableBorderViewManager: RCTViewManager {
-    override func view() -> UIView! {
+    override func view() -> (FocusableBorderHostingView){
         return FocusableBorderHostingView()
     }
     
     override static func requiresMainQueueSetup() -> Bool {
-        return true
+        return false
     }
 }
 
 class FocusableBorderHostingView: UIView {
-    private var contentView: UIView?
-    private var reactSubviews: [UIView] = []
-    
-    @objc var borderColor: NSString = "#FFFFFF" {
-        didSet { if _isFocused { applyFocusStyle() } }
-    }
-    
-    @objc var borderWidth: NSNumber = 2 {
-        didSet { if _isFocused { applyFocusStyle() } }
-    }
-    
-    @objc var cornerRadius: NSNumber = 8 {
-        didSet { layer.cornerRadius = CGFloat(cornerRadius.floatValue) }
-    }
-    
-    @objc var focusAnimationDuration: NSNumber = 200 {
-        didSet { /* Convert from milliseconds to seconds if needed */ }
-    }
-    
-    override func reactSetFrame(_ frame: CGRect) {
-          super.reactSetFrame(frame)
-          // Ensure the content view matches the new frame
-          contentView?.frame = bounds
-      }
-      
-    @objc func reactCleanup() {
-          // Called when React Native is about to recycle this view
-          _isFocused = false
-          layer.borderWidth = 0
-          layer.borderColor = UIColor.clear.cgColor
-          
-          // Remove all subviews
-          reactSubviews.forEach { $0.removeFromSuperview() }
-          reactSubviews.removeAll()
-      }
-      // Event handlers
-      @objc var onPress: RCTBubblingEventBlock?
-      @objc var onFocus: RCTBubblingEventBlock?
-      @objc var onBlur: RCTBubblingEventBlock?
-      
-      // TV-specific properties
-      @objc var hasTVPreferredFocus: Bool = false
-      @objc var isTVSelectable: Bool = true
-      @objc var tvParallaxProperties: NSDictionary?
-    
-    private var _isFocused: Bool = false
+  @objc var onFocus: RCTBubblingEventBlock?
+  @objc var onBlur: RCTBubblingEventBlock?
+  @objc var onPress: RCTBubblingEventBlock?
+  @objc var scale: NSString?
+  @objc var focusable: NSNumber? = 1
+  @objc var enableFocusStyle: NSNumber? = 1
+  @objc var focusStyle: NSDictionary?
+  let event = ["value": "focusEvent"]
+  let pressEvent = ["value": "pressEvent"]
+  let gradientLayer = CAGradientLayer()
   
-    override var canBecomeFocused: Bool {
-          return isTVSelectable
-      }
-    override init(frame: CGRect) {
-        super.init(frame: frame)
-        setupView()
-        setupTapGesture()
-    }
-    
-    required init?(coder: NSCoder) {
-        fatalError("init(coder:) has not been implemented")
-    }
-    
-    private func setupView() {
-        let container = UIView()
-        container.backgroundColor = .clear
-        contentView = container
-        addSubview(container)
-        
-        container.translatesAutoresizingMaskIntoConstraints = false
-        NSLayoutConstraint.activate([
-            container.topAnchor.constraint(equalTo: topAnchor),
-            container.bottomAnchor.constraint(equalTo: bottomAnchor),
-            container.leadingAnchor.constraint(equalTo: leadingAnchor),
-            container.trailingAnchor.constraint(equalTo: trailingAnchor)
-        ])
-        
-        layer.cornerRadius = CGFloat(cornerRadius.floatValue)
-        clipsToBounds = true
-    }
-    
-    override var preferredFocusEnvironments: [UIFocusEnvironment] {
-        return hasTVPreferredFocus ? [self] : []
-    }
-    
-    private func setupTapGesture() {
-        let tapGesture = UITapGestureRecognizer(
-            target: self,
-            action: #selector(handleTap)
-        )
-        addGestureRecognizer(tapGesture)
-    }
-    
-    @objc private func handleTap() {
-        onPress?(["target": reactTag as Any])
-    }
-    
-  override func didUpdateFocus(in context: UIFocusUpdateContext, with coordinator: UIFocusAnimationCoordinator) {
-      if context.nextFocusedView == self {
-          _isFocused = true
-          coordinator.addCoordinatedAnimations({
-              self.applyFocusStyle()
-          }, completion: nil)
-          onFocus?(["target": reactTag as Any])
-      } else if context.previouslyFocusedView == self {
-          _isFocused = false
-          coordinator.addCoordinatedAnimations({
-              self.clearFocusStyle()
-          }, completion: nil)
-          onBlur?(["target": reactTag as Any])
+  
+  init() {
+      super.init(frame: .zero)
+      let gesture = UITapGestureRecognizer(target: self, action:  #selector (self.onClick (_:)))
+      self.addGestureRecognizer(gesture)
+  }
+  
+  required init?(coder: NSCoder) {
+      fatalError("init(coder:) has not been implemented")
+  }
+  
+  @objc func onClick(_ sender:UITapGestureRecognizer){
+      if onPress != nil {
+          onPress!(self.pressEvent)
       }
   }
-    
-    private func applyFocusStyle() {
-        UIView.animate(withDuration: TimeInterval(focusAnimationDuration.floatValue / 1000)) {
-            self.layer.borderColor = UIColor(hex: self.borderColor as String).cgColor
-            self.layer.borderWidth = CGFloat(self.borderWidth.floatValue)
-        }
-    }
-    
-    private func clearFocusStyle() {
-        UIView.animate(withDuration: TimeInterval(focusAnimationDuration.floatValue / 1000)) {
-            self.layer.borderWidth = 0
-            self.layer.borderColor = UIColor.clear.cgColor
-        }
-    }
-    
-    @objc override func insertReactSubview(_ subview: UIView!, at index: Int) {
-        reactSubviews.insert(subview, at: index)
-        contentView?.insertSubview(subview, at: index)
-    }
-    
-    @objc override func removeReactSubview(_ subview: UIView!) {
-        reactSubviews.removeAll { $0 == subview }
-        subview.removeFromSuperview()
-    }
-    
-    override func didUpdateReactSubviews() {
-        // No-op - handled by insert/remove methods
-    }
+  
+  
+  func insertReactSubview(view:UIView!, atIndex:Int) {
+      self.insertSubview(view, at:atIndex)
+      return
+  }
+  
+  override var canBecomeFocused: Bool {
+      return self.focusable == 1
+  }
+  
+  
+  @available(iOS 9.0, *)
+  override func didUpdateFocus(in context: UIFocusUpdateContext, with coordinator: UIFocusAnimationCoordinator) {
+      if context.nextFocusedView == self {
+          if onFocus != nil {
+              onFocus!(self.event)
+          }
+          coordinator.addCoordinatedAnimations({ () -> Void in
+              if (self.enableFocusStyle == 1) {
+                  self.layer.borderWidth = self.focusStyle?["borderWidth"] as? CGFloat ?? 4
+                  if let borderColor = self.focusStyle?["borderColor"] as? String {
+                      self.layer.borderColor = UIColor(hex: borderColor).cgColor
+                  } else {
+                      self.layer.borderColor = UIColor.white.cgColor
+                  }
+              } else {
+                  self.layer.borderWidth = 0
+                  self.layer.backgroundColor = UIColor.clear.cgColor
+                  self.gradientLayer.removeFromSuperlayer()
+              }
+              let scaleFactor = CGFloat(Float(self.scale! as Substring) ?? 1)
+              self.layer.transform = CATransform3DMakeScale(scaleFactor, scaleFactor, scaleFactor)
+          }, completion: nil)
+          
+      } else if context.previouslyFocusedView == self {
+          if onBlur != nil {
+              onBlur!(self.event)
+          }
+          coordinator.addCoordinatedAnimations({ () -> Void in
+              self.layer.borderWidth = 0
+              self.layer.backgroundColor = UIColor.clear.cgColor
+              self.layer.transform = CATransform3DMakeScale(1, 1, 1)
+              self.gradientLayer.removeFromSuperlayer()
+          }, completion: nil)
+      }
+  }
 }

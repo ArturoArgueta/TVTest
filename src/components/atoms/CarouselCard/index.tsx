@@ -1,10 +1,10 @@
 import React from 'react';
 import { ImageRequireSource, TouchableOpacity } from 'react-native';
-import { CardImage } from './styles';
+import { CardImage, FocusableWrapper } from './styles';
 import { Source } from 'react-native-fast-image';
 import { useTVFocus } from '../../../hooks/useTVFocus';
 import { useTheme } from '@emotion/react';
-import { TVFocusBorder } from '../TVFocusBorder';
+import TVFocusBorder from '../TVFocusBorder';
 
 interface CarouselCardProps {
     image_src: number | Source | ImageRequireSource;
@@ -23,33 +23,27 @@ interface CarouselCardProps {
     image_src,
     onPress,
     hasTVPreferredFocus = false,
-    focusBorderColor = '#FFFFFF',
+    focusBorderColor = '#F40',
   }) => {
-    const { isFocused, focusProps } = useTVFocus(hasTVPreferredFocus);
+    const { focusProps } = useTVFocus(hasTVPreferredFocus);
     const theme = useTheme();
   
     return (
-      <TouchableOpacity
+    <FocusableWrapper
+        {...focusProps}
         onPress={onPress}
-        activeOpacity={0.6}
-        style={{ width, aspectRatio, height }}
+        focusStyle={{
+          borderColor: focusBorderColor,
+          borderWidth: theme.scale(2)
+        }}
       >
-        <TVFocusBorder
-          {...focusProps}
-          borderColor={isFocused ? focusBorderColor : 'transparent'}
-          borderWidth={isFocused ? 3 : 0}
-          cornerRadius={theme.sizes.md}
-          style={{ width: '100%', height: '100%' }}
-        >
-            <CardImage
-                aspectRatio={aspectRatio}
-                width={width}
-                height={height}
-                source={image_src}
-            />
-
-        </TVFocusBorder>
-        </TouchableOpacity>
+        <CardImage
+            aspectRatio={aspectRatio}
+            width={width}
+            height={height}
+            source={image_src}
+        />
+      </FocusableWrapper>
     );
   };
   

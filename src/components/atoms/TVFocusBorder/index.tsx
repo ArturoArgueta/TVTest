@@ -1,58 +1,43 @@
-import React from 'react';
-import { requireNativeComponent, ViewStyle, NativeSyntheticEvent } from 'react-native';
+import React, { ForwardedRef } from 'react';
+import { requireNativeComponent, ViewStyle, StyleProp, UIManager } from 'react-native';
 
 type TVFocusBorderProps = {
-  style?: ViewStyle;
-  borderColor?: string;
-  borderWidth?: number;
-  cornerRadius?: number;
-  children?: React.ReactNode;
-  hasTVPreferredFocus?: boolean;
-  onFocus?: (event: NativeSyntheticEvent<null>) => void;
-  onBlur?: (event: NativeSyntheticEvent<null>) => void;
-  onPress?: (event: NativeSyntheticEvent<null>) => void;
-  focusAnimationDuration?: number;
-  isTVSelectable?: boolean;
-  tvParallaxProperties?: {
-    enabled?: boolean;
-    shiftDistanceX?: number;
-    shiftDistanceY?: number;
-    tiltAngle?: number;
-    magnification?: number;
-  };
+  style?: StyleProp<ViewStyle>;
+  children?: object;
+  ref?: ForwardedRef<TVFocusBorderProps>;
+  scale?: string;
+  onFocus?: (e: Event) => void;
+  onBlur?: (e: Event) => void;
+  onPress?: (e: Event) => void;
+  focusable?: boolean;
+  enableFocusStyle?: boolean;
+  focusStyle?: { borderWidth: number; borderColor: string };
 };
 
-const NativeTVFocusBorder = requireNativeComponent<TVFocusBorderProps>(
-  'FocusableBorderView'
-);
+const NativeComponet = 'FocusableBorderView'
+const NativeTVFocusBorder = UIManager.getViewManagerConfig(NativeComponet) != null
+? requireNativeComponent<TVFocusBorderProps>(NativeComponet)
+: () => {
+    throw new Error('FocusableBorderView was not linked!');
+  };
 
-export const TVFocusBorder: React.FC<TVFocusBorderProps> = ({
-  children,
-  borderColor = '#FFFFFF',
-  borderWidth = 2,
-  cornerRadius = 8,
-  hasTVPreferredFocus = false,
-  focusAnimationDuration = 200,
-  onFocus,
-  onBlur,
-  onPress,
-  style,
-  ...props
-}) => {
+const TVFocusBorder =  React.forwardRef(
+  (props: TVFocusBorderProps , ref: ForwardedRef<TVFocusBorderProps>) => {
   return (
     <NativeTVFocusBorder
-      borderColor={borderColor}
-      borderWidth={borderWidth}
-      cornerRadius={cornerRadius}
-      hasTVPreferredFocus={hasTVPreferredFocus}
-      focusAnimationDuration={focusAnimationDuration}
-      onFocus={onFocus}
-      onBlur={onBlur}
-      onPress={onPress}
-      style={{ overflow: 'hidden' ,...style}}
-      {...props}
+    ref={ref}
+    style={props.style}
+    focusable={props.focusable ?? true}
+    onFocus={props.onFocus}
+    onBlur={props.onBlur}
+    onPress={props.onPress}
+    scale={props.scale ?? '1'}
+    enableFocusStyle={props.enableFocusStyle ?? true}
+    focusStyle={props.focusStyle}
     >
-      {children}
+      {props.children}
     </NativeTVFocusBorder>
   );
-};
+})
+
+export default TVFocusBorder
