@@ -1,6 +1,6 @@
 import styled from '@emotion/native';
 
-export const PlayerContent = styled.View(({ theme }) =>({
+export const PlayerContent = styled.ScrollView(({ theme }) =>({
     flex: 1,
     padding: 20,
     flexDirection: 'column',
