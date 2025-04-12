@@ -10,3 +10,8 @@ export const PlayerContent = styled.View(({ theme }) =>({
 export const ButtonWrapper = styled.View(({ theme }) => ({
     width: 150,
 })); 
+
+export const RowButtonsContainer = styled.View({
+    width: '100%',
+    justifyContent: 'space-between',
+})
