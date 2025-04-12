@@ -1,5 +1,5 @@
 import styled from '@emotion/native';
-import { DimensionValue, TouchableOpacity } from 'react-native';
+import { DimensionValue } from 'react-native';
 import FastImage from 'react-native-fast-image';
 import TVFocusBorder from '../TVFocusBorder';
 
@@ -10,7 +10,6 @@ export interface CardImageProps {
 }
 
 export const CardImage = styled(FastImage)<CardImageProps>(({
-    theme, 
     width,
     height,
     aspectRatio

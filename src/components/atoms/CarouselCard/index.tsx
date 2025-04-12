@@ -1,10 +1,9 @@
 import React from 'react';
-import { ImageRequireSource, TouchableOpacity } from 'react-native';
+import { ImageRequireSource } from 'react-native';
 import { CardImage, FocusableWrapper } from './styles';
 import { Source } from 'react-native-fast-image';
 import { useTVFocus } from '../../../hooks/useTVFocus';
 import { useTheme } from '@emotion/react';
-import TVFocusBorder from '../TVFocusBorder';
 
 interface CarouselCardProps {
     image_src: number | Source | ImageRequireSource;
@@ -23,7 +22,7 @@ interface CarouselCardProps {
     image_src,
     onPress,
     hasTVPreferredFocus = false,
-    focusBorderColor = '#F40',
+    focusBorderColor = '#42bff5',
   }) => {
     const { focusProps } = useTVFocus(hasTVPreferredFocus);
     const theme = useTheme();
@@ -34,7 +33,7 @@ interface CarouselCardProps {
         onPress={onPress}
         focusStyle={{
           borderColor: focusBorderColor,
-          borderWidth: theme.scale(2)
+          borderWidth: theme.scale(4)
         }}
       >
         <CardImage
