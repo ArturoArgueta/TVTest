@@ -1,9 +1,13 @@
 import React, { useRef } from 'react'
 import { requireNativeComponent, UIManager, findNodeHandle, StyleProp, ViewStyle, View } from 'react-native'
 
+type ResizeMode = 'contain' | 'cover' | 'stretch'
+
 interface NativeVideoPlayerProps {
   videoURL: string
   style?: StyleProp<ViewStyle>
+  borderRadius?: number
+  resizeMode?: string
   onError?: (error: any) => void
   onLoad?: () => void
   onProgress?: (progress: { currentTime: number; duration: number }) => void
@@ -16,7 +20,9 @@ console.log('Available UIManager commands:', UIManager.getViewManagerConfig('Vid
 
 export interface VideoPlayerProps {
   videoURL: string
-  style?: StyleProp<ViewStyle>;
+  style?: StyleProp<ViewStyle>
+  borderRadius?: number
+  resizeMode?: ResizeMode
   onError?: (error: any) => void
   onLoad?: () => void
   onProgress?: (progress: { currentTime: number; duration: number }) => void
@@ -30,6 +36,15 @@ export interface VideoPlayerRef {
 
 const VideoPlayer = React.forwardRef<VideoPlayerRef, VideoPlayerProps>((props, ref) => {
   const videoRef = useRef(null)
+  const { 
+    videoURL, 
+    style, 
+    borderRadius = 0, 
+    resizeMode = 'cover',
+    onError, 
+    onLoad, 
+    onProgress 
+  } = props
 
   React.useImperativeHandle(ref, () => ({
     play: () => {
@@ -52,20 +67,23 @@ const VideoPlayer = React.forwardRef<VideoPlayerRef, VideoPlayerProps>((props, r
   const containerStyle: ViewStyle = {
     backgroundColor: 'black',
     width: '100%',
-    height: 300,
     position: 'relative',
+    overflow: 'hidden',
     zIndex: 1,
+    borderRadius: borderRadius,
   }
 
   return (
-    <View style={[containerStyle, props.style]}>
+    <View style={[containerStyle, style]}>
       <NativeVideoPlayer
         ref={videoRef}
-        videoURL={props.videoURL}
+        videoURL={videoURL}
         style={{ width: '100%', height: '100%' }}
-        onError={props.onError}
-        onLoad={props.onLoad}
-        onProgress={props.onProgress}
+        borderRadius={borderRadius}
+        resizeMode={resizeMode}
+        onError={onError}
+        onLoad={onLoad}
+        onProgress={onProgress}
       />
     </View>
   )

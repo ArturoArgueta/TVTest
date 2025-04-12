@@ -7,6 +7,8 @@ import React
 class VideoPlayerView: UIView {
     private var player: AVPlayer?
     private var avPlayerLayer: AVPlayerLayer?
+    private var _videoGravity: AVLayerVideoGravity = .resizeAspectFill
+    private var _borderRadius: CGFloat = 0
     
     override init(frame: CGRect) {
         super.init(frame: frame)
@@ -17,6 +19,48 @@ class VideoPlayerView: UIView {
     required init?(coder: NSCoder) {
         super.init(coder: coder)
         setupPlayerLayer()
+    }
+    
+    @objc var borderRadius: CGFloat {
+        get {
+            return _borderRadius
+        }
+        set {
+            _borderRadius = newValue
+            layer.cornerRadius = newValue
+            layer.masksToBounds = newValue > 0
+            print("Border radius set to:", newValue)
+        }
+    }
+    
+    @objc var resizeMode: NSString {
+        get {
+            switch _videoGravity {
+            case .resizeAspect:
+                return "contain" as NSString
+            case .resizeAspectFill:
+                return "cover" as NSString
+            case .resize:
+                return "stretch" as NSString
+            default:
+                return "cover" as NSString
+            }
+        }
+        set {
+            let mode = newValue as String
+            switch mode {
+            case "contain":
+                _videoGravity = .resizeAspect
+            case "cover":
+                _videoGravity = .resizeAspectFill
+            case "stretch":
+                _videoGravity = .resize
+            default:
+                _videoGravity = .resizeAspectFill
+            }
+            print("Resize mode set to:", mode)
+            avPlayerLayer?.videoGravity = _videoGravity
+        }
     }
     
     private func setupPlayerLayer() {
@@ -30,12 +74,18 @@ class VideoPlayerView: UIView {
         
         // Create and configure AVPlayerLayer
         let playerLayer = AVPlayerLayer(player: player)
-        playerLayer.videoGravity = .resizeAspectFill // Change to fill the view
+        playerLayer.videoGravity = _videoGravity
         playerLayer.frame = bounds
         
         // Add it to the view's layer
         layer.addSublayer(playerLayer)
         avPlayerLayer = playerLayer
+        
+        // Apply existing border radius if set
+        if _borderRadius > 0 {
+            layer.cornerRadius = _borderRadius
+            layer.masksToBounds = true
+        }
         
         print("Player layer setup complete - frame:", bounds)
     }
