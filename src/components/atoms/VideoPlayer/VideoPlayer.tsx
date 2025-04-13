@@ -8,6 +8,7 @@ interface NativeVideoPlayerProps {
   style?: StyleProp<ViewStyle>
   borderRadius?: number
   resizeMode?: string
+  children?: React.ReactNode
   onError?: (error: any) => void
   onLoad?: () => void
   onProgress?: (progress: { currentTime: number; duration: number }) => void
@@ -23,6 +24,9 @@ export interface VideoPlayerProps {
   style?: StyleProp<ViewStyle>
   borderRadius?: number
   resizeMode?: ResizeMode
+  children?: React.ReactNode
+  upNextComponent?: React.ReactNode
+  upNextPosition?: 'bottom-right' | 'full-overlay'
   onError?: (error: any) => void
   onLoad?: () => void
   onProgress?: (progress: { currentTime: number; duration: number }) => void
@@ -41,6 +45,9 @@ const VideoPlayer = React.forwardRef<VideoPlayerRef, VideoPlayerProps>((props, r
     style, 
     borderRadius = 0, 
     resizeMode = 'cover',
+    children,
+    upNextComponent,
+    upNextPosition = 'bottom-right',
     onError, 
     onLoad, 
     onProgress 
@@ -73,6 +80,47 @@ const VideoPlayer = React.forwardRef<VideoPlayerRef, VideoPlayerProps>((props, r
     borderRadius: borderRadius,
   }
 
+  // Position styles for the up next component when using the React Native approach
+  const upNextStyles: ViewStyle = upNextPosition === 'bottom-right' 
+    ? {
+        position: 'absolute',
+        bottom: 16,
+        right: 16,
+        maxWidth: '40%',
+        maxHeight: '40%',
+        zIndex: 2,
+      }
+    : {
+        position: 'absolute',
+        top: 0,
+        left: 0,
+        right: 0,
+        bottom: 0,
+        zIndex: 2,
+        backgroundColor: 'rgba(0,0,0,0.4)',
+        justifyContent: 'center',
+        alignItems: 'center',
+      }
+
+  // When using pure native approach with children, simply pass the children to the native component
+  if (children) {
+    return (
+      <NativeVideoPlayer
+        ref={videoRef}
+        videoURL={videoURL}
+        style={[containerStyle, style]}
+        borderRadius={borderRadius}
+        resizeMode={resizeMode}
+        onError={onError}
+        onLoad={onLoad}
+        onProgress={onProgress}
+      >
+        {children}
+      </NativeVideoPlayer>
+    )
+  }
+
+  // Original React Native overlay approach when using upNextComponent
   return (
     <View style={[containerStyle, style]}>
       <NativeVideoPlayer
@@ -85,6 +133,13 @@ const VideoPlayer = React.forwardRef<VideoPlayerRef, VideoPlayerProps>((props, r
         onLoad={onLoad}
         onProgress={onProgress}
       />
+      
+      {/* Up Next overlay */}
+      {upNextComponent && (
+        <View style={upNextStyles}>
+          {upNextComponent}
+        </View>
+      )}
     </View>
   )
 })

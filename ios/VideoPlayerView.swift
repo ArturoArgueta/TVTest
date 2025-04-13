@@ -9,16 +9,40 @@ class VideoPlayerView: UIView {
     private var avPlayerLayer: AVPlayerLayer?
     private var _videoGravity: AVLayerVideoGravity = .resizeAspectFill
     private var _borderRadius: CGFloat = 0
+    private var overlayContainer: UIView?
     
     override init(frame: CGRect) {
         super.init(frame: frame)
         backgroundColor = .black
         setupPlayerLayer()
+        setupOverlayContainer()
     }
     
     required init?(coder: NSCoder) {
         super.init(coder: coder)
         setupPlayerLayer()
+        setupOverlayContainer()
+    }
+    
+    private func setupOverlayContainer() {
+        // Create overlay container
+        let container = UIView()
+        container.backgroundColor = .clear
+        container.isUserInteractionEnabled = true
+        container.frame = bounds
+        
+        addSubview(container)
+        overlayContainer = container
+    }
+    
+  @objc override func insertReactSubview(_ subview: UIView!, at atIndex: Int) {
+        if atIndex == 0 {
+            // First subview is treated as the video player content
+            super.insertSubview(subview, at: 0)
+        } else {
+            // Additional subviews are added to the overlay container
+            overlayContainer?.insertSubview(subview, at: atIndex - 1)
+        }
     }
     
     @objc var borderRadius: CGFloat {
@@ -132,6 +156,7 @@ class VideoPlayerView: UIView {
         CATransaction.begin()
         CATransaction.setDisableActions(true)
         avPlayerLayer?.frame = self.bounds
+        overlayContainer?.frame = self.bounds
         CATransaction.commit()
     }
     
