@@ -1,83 +1,78 @@
-import React, { useEffect, useRef, useState } from 'react';
-import { Alert, Text } from 'react-native';
+import React, { useCallback, useEffect, useRef, useState } from 'react';
+import { Alert, findNodeHandle, TVEventControl, View } from 'react-native';
 import { NativeStackScreenProps } from '@react-navigation/native-stack';
 import { RootStackParamList } from '../../../../navigation/types';
-import { MainWrapper } from '../../../Home/pages/HomeScreen/style';
-import { TVButton } from '../../../../components';
-import { PlayerContent, RowButtonsContainer } from './styles';
+import { ButtonContainer } from './styles';
 import VideoPlayer,{VideoPlayerRef} from '../../../../components/atoms/VideoPlayer/VideoPlayer';
-import { useTheme } from '@emotion/react';
-import UpNextPreview from '../../../../components/atoms/VideoPlayer/UpNextPreview';
+import UpNextPreview from '../../../../components/molecules/UpNextView';
 
 type Props = NativeStackScreenProps<RootStackParamList, 'Player'>;
 
-const PlayerScreen: React.FC<Props> = ({ route, navigation }) => {
-    const { url } = route.params;
-
+const PlayerScreen: React.FC<Props> = ({ navigation }) => {
     const handleBack = () => {
         navigation.goBack();
     };
-    const VideoPlayerRef = useRef<VideoPlayerRef>(null)
-    const theme = useTheme()
-    // const [showUpNext, setShowUpNext] = useState(false)
-    // const [timeRemaining, setTimeRemaining] = useState(8)
+    const VideoPlayerRef = useRef<VideoPlayerRef>(null);
+    const upNextRef = useRef(null);
+    const [showUpNext, setShowUpNext] = useState(false);
+    const [timeRemaining, setTimeRemaining] = useState(8);
+    useEffect(() => {VideoPlayerRef.current?.play();},[]);
 
-    // useEffect(() => {
-    //     const timer = setTimeout(() => {
-    //       setShowUpNext(true)
-    //     }, 10000) // Show after 10 seconds
-        
-    //     return () => clearTimeout(timer)
-    //   }, [])
-      
-    //   // Countdown timer for "Playing in X seconds"
-    //   useEffect(() => {
-    //     if (!showUpNext) return
-        
-    //     if (timeRemaining > 0) {
-    //       const timer = setTimeout(() => {
-    //         setTimeRemaining(prev => prev - 1)
-    //       }, 1000)
-          
-    //       return () => clearTimeout(timer)
-    //     } else {
-    //       // Auto-play next video when countdown reaches 0
-    //       playNextVideo()
-    //     }
-    //   }, [showUpNext, timeRemaining])
-      
-    //   const playNextVideo = () => {
-    //     // In a real app, you would load the next video here
-    //     Alert.alert('Next Video', 'Playing next video!')
-    //     setShowUpNext(false)
-    //   }
 
+    // Countdown timer for "Playing in X seconds"
+    useEffect(() => {
+    if (!showUpNext) {return;}
+
+    if (timeRemaining > 0) {
+        const timer = setTimeout(() => {
+        setTimeRemaining(prev => prev - 1);
+        }, 1000);
+
+        return () => clearTimeout(timer);
+    } else {
+        // Auto-play next video when countdown reaches 0
+        playNextVideo();
+    }
+    }, [showUpNext, timeRemaining]);
+
+    const playNextVideo = () => {
+    Alert.alert('Next Video', 'Playing next video!');
+    setShowUpNext(false);
+    };
+
+    const onVideoOver = useCallback(() => {
+        setShowUpNext(true);
+        VideoPlayerRef.current?.pause();
+    },[]);
 
     return (
-            <VideoPlayer ref={VideoPlayerRef} 
-            style={{aspectRatio: 1, width: '100%' , alignSelf: 'center' }}
-            videoURL={'https://flipfit-cdn.akamaized.net/flip_hls/662aae7a42cd740019b91dec-3e114f/video_h1.m3u8'} 
-            resizeMode='contain'
-            accessible={true}
-            >
-                {/* <UpNextPreview
+        <>
+            <ButtonContainer onPress={handleBack} 
+            focusable={true}
+            accessible={true}>
+                <View />
+            </ButtonContainer>
+            
+            <VideoPlayer ref={VideoPlayerRef}
+            style={{aspectRatio: 16 / 9, width: '100%' , alignSelf: 'center' }}
+            videoURL={'https://flipfit-cdn.akamaized.net/flip_hls/662aae7a42cd740019b91dec-3e114f/video_h1.m3u8'}
+            resizeMode="stretch"
+            accessible={!showUpNext}
+            onEnd={onVideoOver}
+            overlayVisible={showUpNext}
+            upNextComponent={
+                <UpNextPreview
+                    ref={upNextRef}
                     title="Next Episode: Memoirs of Aratrika"
                     episodeInfo="S1 E2"
                     imageUrl="https://picsum.photos/300/170"
                     timeRemaining={timeRemaining}
-                    onPress={playNextVideo}
-                containerStyle={{
-                    position: 'absolute',
-                    bottom: 16,
-                    right: 16,
-                    width: 280,
-                    borderRadius: 8,
-                    overflow: 'hidden',
-                    }}
-                /> */}
-            </VideoPlayer>
-           
+                    onPress={playNextVideo}/>
+            }
+            />
+         
+        </>
     );
 };
 
-export default PlayerScreen; 
+export default PlayerScreen;

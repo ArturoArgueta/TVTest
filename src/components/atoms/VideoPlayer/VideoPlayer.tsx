@@ -42,6 +42,7 @@ export interface VideoPlayerProps {
   accessibilityLabel?: string
   hasTVPreferredFocus?: boolean
   tvParallaxProperties?: any
+  overlayVisible?: boolean
 }
 
 export interface VideoPlayerRef {
@@ -97,28 +98,6 @@ const VideoPlayer = React.forwardRef<VideoPlayerRef, VideoPlayerProps>((props, r
     zIndex: 1,
     borderRadius: borderRadius,
   }
-
-  // Position styles for the up next component when using the React Native approach
-  const upNextStyles: ViewStyle = upNextPosition === 'bottom-right' 
-    ? {
-        position: 'absolute',
-        bottom: 16,
-        right: 16,
-        maxWidth: '40%',
-        maxHeight: '40%',
-        zIndex: 2,
-      }
-    : {
-        position: 'absolute',
-        top: 0,
-        left: 0,
-        right: 0,
-        bottom: 0,
-        zIndex: 2,
-        backgroundColor: 'rgba(0,0,0,0.4)',
-        justifyContent: 'center',
-        alignItems: 'center',
-      }
 
   // Event handlers
   const handleError = (event: { nativeEvent: { error: string } }) => {
@@ -191,11 +170,7 @@ const VideoPlayer = React.forwardRef<VideoPlayerRef, VideoPlayerProps>((props, r
       />
       
       {/* Up Next overlay */}
-      {upNextComponent && (
-        <View style={upNextStyles}>
-          {upNextComponent}
-        </View>
-      )}
+      {props.overlayVisible && upNextComponent}
     </View>
   )
 })
