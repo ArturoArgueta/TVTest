@@ -1,6 +1,5 @@
-import React from 'react';
-import { Text, Image, TouchableOpacity } from 'react-native';
-import { ButtonRow, CardContainer, Container, Content, CreditsButton, CreditsButtonText, EpisodeInfo, PlayButton, PlayButtonText, Thumbnail, Title } from './styles';
+import React, { forwardRef } from 'react';
+import { ButtonRow, CardContainer, Container, Content, CreditsButton, CreditsButtonText, EpisodeInfo, PlayButton, PlayButtonText, Thumbnail } from './styles';
 interface Props {
   title: string;
   episodeInfo: string;
@@ -8,9 +7,10 @@ interface Props {
   timeRemaining: number;
   onPress: () => void;
 }
-const UpNextPreview: React.FC<Props> = ({episodeInfo, imageUrl, timeRemaining, onPress }) => {
+const UpNextPreview = forwardRef<any, Props>((props, ref) => {
+  const {episodeInfo, imageUrl, timeRemaining, onPress} = props;
   return (
-    <Container>
+    <Container ref={ref}>
         <Content>
             <CardContainer>
                 <Thumbnail source={{ uri: imageUrl }} resizeMode="cover" />
@@ -37,5 +37,5 @@ const UpNextPreview: React.FC<Props> = ({episodeInfo, imageUrl, timeRemaining, o
       </Content>
     </Container>
   );
-};
+});
 export default UpNextPreview;

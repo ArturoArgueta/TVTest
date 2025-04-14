@@ -1,23 +1,19 @@
 import React, { useCallback, useEffect, useRef, useState } from 'react';
-import { Alert, Text } from 'react-native';
+import { Alert, findNodeHandle, View } from 'react-native';
 import { NativeStackScreenProps } from '@react-navigation/native-stack';
 import { RootStackParamList } from '../../../../navigation/types';
-import BackArrow from '../../../../assets/icons/backArrow.svg';
-import { ButtonContainer, PlayerContent, RowButtonsContainer } from './styles';
+import { ButtonContainer } from './styles';
 import VideoPlayer,{VideoPlayerRef} from '../../../../components/atoms/VideoPlayer/VideoPlayer';
-import { useTheme } from '@emotion/react';
 import UpNextPreview from '../../../../components/molecules/UpNextView';
 
 type Props = NativeStackScreenProps<RootStackParamList, 'Player'>;
 
-const PlayerScreen: React.FC<Props> = ({ route, navigation }) => {
-    const { url } = route.params;
-
+const PlayerScreen: React.FC<Props> = ({ navigation }) => {
     const handleBack = () => {
         navigation.goBack();
     };
     const VideoPlayerRef = useRef<VideoPlayerRef>(null);
-    const theme = useTheme();
+    const upNextRef = useRef(null);
     const [showUpNext, setShowUpNext] = useState(false);
     const [timeRemaining, setTimeRemaining] = useState(8);
     useEffect(() => {VideoPlayerRef.current?.play();},[]);
@@ -46,16 +42,28 @@ const PlayerScreen: React.FC<Props> = ({ route, navigation }) => {
     };
 
     const onVideoOver = useCallback(() => {
-        setShowUpNext(true)
-        VideoPlayerRef.current?.pause()
-    },[])
+        setShowUpNext(true);
+        VideoPlayerRef.current?.pause();
+        
+        // Allow a brief moment for the UI to update before attempting to set focus
+        setTimeout(() => {
+            if (upNextRef.current) {
+                // TVFocus handling should be implemented platform-specifically
+                const tag = findNodeHandle(upNextRef.current);
+                if (tag) {
+                    // This will be implemented with actual TV focus API 
+                    // TVEventControl.requestTVFocus(tag);
+                }
+            }
+        }, 100);
+    },[]);
 
     return (
         <>
             <ButtonContainer onPress={handleBack} 
             focusable={true}
             accessible={true}>
-                <BackArrow />
+                <View />
             </ButtonContainer>
             
             <VideoPlayer ref={VideoPlayerRef}
@@ -67,6 +75,7 @@ const PlayerScreen: React.FC<Props> = ({ route, navigation }) => {
             overlayVisible={showUpNext}
             upNextComponent={
                 <UpNextPreview
+                    ref={upNextRef}
                     title="Next Episode: Memoirs of Aratrika"
                     episodeInfo="S1 E2"
                     imageUrl="https://picsum.photos/300/170"
