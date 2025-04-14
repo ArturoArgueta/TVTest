@@ -20,6 +20,16 @@ class VideoPlayerView: UIView {
     @objc var onLoad: RCTDirectEventBlock?
     @objc var onError: RCTDirectEventBlock?
     
+    @objc var nativeFullscreen: Bool = false {
+        didSet {
+            #if os(tvOS)
+            if nativeFullscreen && player != nil {
+                presentFullscreenPlayer()
+            }
+            #endif
+        }
+    }
+    
     override init(frame: CGRect) {
         super.init(frame: frame)
         backgroundColor = .black
@@ -404,6 +414,26 @@ class VideoPlayerView: UIView {
         }
         return [self]
     }
+    
+    private func presentFullscreenPlayer() {
+        guard let parentVC = findViewController(), let player = player else {
+            print("Cannot present fullscreen player: missing parent view controller or player")
+            return
+        }
+        
+        // Create a new AVPlayerViewController for fullscreen presentation
+        let playerVC = AVPlayerViewController()
+        playerVC.player = player
+        playerVC.showsPlaybackControls = true
+        
+        // Present it modally
+        parentVC.present(playerVC, animated: true) {
+            print("Presented player in fullscreen mode")
+        }
+    }
+    
+    @objc func showNativeControls() {
+        presentFullscreenPlayer()
+    }
     #endif
 }
-
