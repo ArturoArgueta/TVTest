@@ -19,85 +19,64 @@ const PlayerScreen: React.FC<Props> = ({ route, navigation }) => {
     };
     const VideoPlayerRef = useRef<VideoPlayerRef>(null)
     const theme = useTheme()
-    const [showUpNext, setShowUpNext] = useState(false)
-    const [timeRemaining, setTimeRemaining] = useState(8)
+    // const [showUpNext, setShowUpNext] = useState(false)
+    // const [timeRemaining, setTimeRemaining] = useState(8)
 
-    useEffect(() => {
-        const timer = setTimeout(() => {
-          setShowUpNext(true)
-        }, 10000) // Show after 10 seconds
+    // useEffect(() => {
+    //     const timer = setTimeout(() => {
+    //       setShowUpNext(true)
+    //     }, 10000) // Show after 10 seconds
         
-        return () => clearTimeout(timer)
-      }, [])
+    //     return () => clearTimeout(timer)
+    //   }, [])
       
-      // Countdown timer for "Playing in X seconds"
-      useEffect(() => {
-        if (!showUpNext) return
+    //   // Countdown timer for "Playing in X seconds"
+    //   useEffect(() => {
+    //     if (!showUpNext) return
         
-        if (timeRemaining > 0) {
-          const timer = setTimeout(() => {
-            setTimeRemaining(prev => prev - 1)
-          }, 1000)
+    //     if (timeRemaining > 0) {
+    //       const timer = setTimeout(() => {
+    //         setTimeRemaining(prev => prev - 1)
+    //       }, 1000)
           
-          return () => clearTimeout(timer)
-        } else {
-          // Auto-play next video when countdown reaches 0
-          playNextVideo()
-        }
-      }, [showUpNext, timeRemaining])
+    //       return () => clearTimeout(timer)
+    //     } else {
+    //       // Auto-play next video when countdown reaches 0
+    //       playNextVideo()
+    //     }
+    //   }, [showUpNext, timeRemaining])
       
-      const playNextVideo = () => {
-        // In a real app, you would load the next video here
-        Alert.alert('Next Video', 'Playing next video!')
-        setShowUpNext(false)
-      }
+    //   const playNextVideo = () => {
+    //     // In a real app, you would load the next video here
+    //     Alert.alert('Next Video', 'Playing next video!')
+    //     setShowUpNext(false)
+    //   }
 
 
     return (
-        <MainWrapper>
-            <PlayerContent>
-                <Text style={{ color: 'white' }}>Player Screen</Text>
-                <Text style={{ color: 'white' }}>URL: {url}</Text>
-                <VideoPlayer ref={VideoPlayerRef} 
-                style={{aspectRatio: 16/9, width: '80%' , alignSelf: 'center' , padding: theme.scale(15)}}
-                videoURL={'https://flipfit-cdn.akamaized.net/flip_hls/662aae7a42cd740019b91dec-3e114f/video_h1.m3u8'} 
-                resizeMode='contain'
-                accessible={true}
-                hasTVPreferredFocus
-                >
-                    <UpNextPreview
-                      title="Next Episode: Memoirs of Aratrika"
-                      episodeInfo="S1 E2"
-                      imageUrl="https://picsum.photos/300/170"
-                      timeRemaining={timeRemaining}
-                      onPress={playNextVideo}
-                    containerStyle={{
-                        position: 'absolute',
-                        bottom: 16,
-                        right: 16,
-                        width: 280,
-                        borderRadius: 8,
-                        overflow: 'hidden',
-                      }}
-                    />
-                </VideoPlayer>
-                <RowButtonsContainer>
-                    <TVButton 
-                        title="Back to Home" 
-                        onPress={handleBack}
-                    />
-                    <TVButton 
-                        title="PLay it" 
-                        onPress={() => VideoPlayerRef.current?.play()}
-                    />
-                    <TVButton 
-                        title="Pause it" 
-                        onPress={() => VideoPlayerRef.current?.pause()}
-                    />
-                </RowButtonsContainer>
-                
-            </PlayerContent>
-        </MainWrapper>
+            <VideoPlayer ref={VideoPlayerRef} 
+            style={{aspectRatio: 1, width: '100%' , alignSelf: 'center' }}
+            videoURL={'https://flipfit-cdn.akamaized.net/flip_hls/662aae7a42cd740019b91dec-3e114f/video_h1.m3u8'} 
+            resizeMode='contain'
+            accessible={true}
+            >
+                {/* <UpNextPreview
+                    title="Next Episode: Memoirs of Aratrika"
+                    episodeInfo="S1 E2"
+                    imageUrl="https://picsum.photos/300/170"
+                    timeRemaining={timeRemaining}
+                    onPress={playNextVideo}
+                containerStyle={{
+                    position: 'absolute',
+                    bottom: 16,
+                    right: 16,
+                    width: 280,
+                    borderRadius: 8,
+                    overflow: 'hidden',
+                    }}
+                /> */}
+            </VideoPlayer>
+           
     );
 };
 

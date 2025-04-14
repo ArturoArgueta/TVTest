@@ -82,6 +82,15 @@ class VideoPlayerView: UIView {
                 print("Added AVPlayerViewController view to hierarchy, bounds:", bounds)
             }
             
+            // Add the controller as a child view controller
+            if let parentViewController = self.findViewController() {
+                parentViewController.addChild(controller)
+                controller.didMove(toParent: parentViewController)
+                print("Added AVPlayerViewController to parent view controller")
+            } else {
+                print("Warning: Could not find parent view controller")
+            }
+            
             playerViewController = controller
         }
         
@@ -90,6 +99,18 @@ class VideoPlayerView: UIView {
             playerViewController?.view.layer.cornerRadius = _borderRadius
             playerViewController?.view.layer.masksToBounds = true
         }
+    }
+    
+    // Helper method to find the parent view controller
+    private func findViewController() -> UIViewController? {
+        var responder: UIResponder? = self
+        while let nextResponder = responder?.next {
+            responder = nextResponder
+            if let viewController = responder as? UIViewController {
+                return viewController
+            }
+        }
+        return nil
     }
     
     private func setupPlayerLayer() {
@@ -385,3 +406,4 @@ class VideoPlayerView: UIView {
     }
     #endif
 }
+
