@@ -1,5 +1,5 @@
 import React, { useCallback, useEffect, useRef, useState } from 'react';
-import { Alert, findNodeHandle, View } from 'react-native';
+import { Alert, findNodeHandle, TVEventControl, View } from 'react-native';
 import { NativeStackScreenProps } from '@react-navigation/native-stack';
 import { RootStackParamList } from '../../../../navigation/types';
 import { ButtonContainer } from './styles';
@@ -36,7 +36,6 @@ const PlayerScreen: React.FC<Props> = ({ navigation }) => {
     }, [showUpNext, timeRemaining]);
 
     const playNextVideo = () => {
-    // In a real app, you would load the next video here
     Alert.alert('Next Video', 'Playing next video!');
     setShowUpNext(false);
     };
@@ -44,18 +43,6 @@ const PlayerScreen: React.FC<Props> = ({ navigation }) => {
     const onVideoOver = useCallback(() => {
         setShowUpNext(true);
         VideoPlayerRef.current?.pause();
-        
-        // Allow a brief moment for the UI to update before attempting to set focus
-        setTimeout(() => {
-            if (upNextRef.current) {
-                // TVFocus handling should be implemented platform-specifically
-                const tag = findNodeHandle(upNextRef.current);
-                if (tag) {
-                    // This will be implemented with actual TV focus API 
-                    // TVEventControl.requestTVFocus(tag);
-                }
-            }
-        }, 100);
     },[]);
 
     return (

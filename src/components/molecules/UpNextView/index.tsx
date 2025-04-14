@@ -19,6 +19,7 @@ const UpNextPreview = forwardRef<any, Props>((props, ref) => {
             <ButtonRow>
             <CreditsButton
                 focusable={true}
+                hasTVPreferredFocus
                 accessible={true}
                 onPress={() => {
                 console.log('Watch Credits Pressed');
