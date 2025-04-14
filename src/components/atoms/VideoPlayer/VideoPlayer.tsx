@@ -9,9 +9,14 @@ interface NativeVideoPlayerProps {
   borderRadius?: number
   resizeMode?: string
   children?: React.ReactNode
-  onError?: (error: any) => void
-  onLoad?: () => void
-  onProgress?: (progress: { currentTime: number; duration: number }) => void
+  onError?: (event: { nativeEvent: { error: string } }) => void
+  onLoad?: (event: { nativeEvent: { duration: number } }) => void
+  onProgress?: (event: { nativeEvent: { currentTime: number; duration: number } }) => void
+  onEnd?: (event: { nativeEvent: any }) => void
+  accessible?: boolean
+  accessibilityLabel?: string
+  hasTVPreferredFocus?: boolean
+  tvParallaxProperties?: any
 }
 
 const NativeVideoPlayer = requireNativeComponent<NativeVideoPlayerProps>('VideoPlayerView')
@@ -27,9 +32,16 @@ export interface VideoPlayerProps {
   children?: React.ReactNode
   upNextComponent?: React.ReactNode
   upNextPosition?: 'bottom-right' | 'full-overlay'
-  onError?: (error: any) => void
-  onLoad?: () => void
+  onError?: (error: string) => void
+  onLoad?: (data: { duration: number }) => void
   onProgress?: (progress: { currentTime: number; duration: number }) => void
+  onEnd?: () => void
+  progressUpdateInterval?: number
+  // TV-specific props
+  accessible?: boolean
+  accessibilityLabel?: string
+  hasTVPreferredFocus?: boolean
+  tvParallaxProperties?: any
 }
 
 export interface VideoPlayerRef {
@@ -50,7 +62,13 @@ const VideoPlayer = React.forwardRef<VideoPlayerRef, VideoPlayerProps>((props, r
     upNextPosition = 'bottom-right',
     onError, 
     onLoad, 
-    onProgress 
+    onProgress,
+    onEnd,
+    // TV-specific props
+    accessible = true,
+    accessibilityLabel = 'Video Player',
+    hasTVPreferredFocus,
+    tvParallaxProperties
   } = props
 
   React.useImperativeHandle(ref, () => ({
@@ -102,6 +120,34 @@ const VideoPlayer = React.forwardRef<VideoPlayerRef, VideoPlayerProps>((props, r
         alignItems: 'center',
       }
 
+  // Event handlers
+  const handleError = (event: { nativeEvent: { error: string } }) => {
+    if (onError) {
+      onError(event.nativeEvent.error);
+    }
+  };
+
+  const handleLoad = (event: { nativeEvent: { duration: number } }) => {
+    if (onLoad) {
+      onLoad({ duration: event.nativeEvent.duration });
+    }
+  };
+
+  const handleProgress = (event: { nativeEvent: { currentTime: number; duration: number } }) => {
+    if (onProgress) {
+      onProgress({
+        currentTime: event.nativeEvent.currentTime,
+        duration: event.nativeEvent.duration,
+      });
+    }
+  };
+
+  const handleEnd = () => {
+    if (onEnd) {
+      onEnd();
+    }
+  };
+
   // When using pure native approach with children, simply pass the children to the native component
   if (children) {
     return (
@@ -111,9 +157,14 @@ const VideoPlayer = React.forwardRef<VideoPlayerRef, VideoPlayerProps>((props, r
         style={[containerStyle, style]}
         borderRadius={borderRadius}
         resizeMode={resizeMode}
-        onError={onError}
-        onLoad={onLoad}
-        onProgress={onProgress}
+        onError={handleError}
+        onLoad={handleLoad}
+        onProgress={handleProgress}
+        onEnd={handleEnd}
+        accessible={accessible}
+        accessibilityLabel={accessibilityLabel}
+        hasTVPreferredFocus={hasTVPreferredFocus}
+        tvParallaxProperties={tvParallaxProperties}
       >
         {children}
       </NativeVideoPlayer>
@@ -129,9 +180,14 @@ const VideoPlayer = React.forwardRef<VideoPlayerRef, VideoPlayerProps>((props, r
         style={{ width: '100%', height: '100%' }}
         borderRadius={borderRadius}
         resizeMode={resizeMode}
-        onError={onError}
-        onLoad={onLoad}
-        onProgress={onProgress}
+        onError={handleError}
+        onLoad={handleLoad}
+        onProgress={handleProgress}
+        onEnd={handleEnd}
+        accessible={accessible}
+        accessibilityLabel={accessibilityLabel}
+        hasTVPreferredFocus={hasTVPreferredFocus}
+        tvParallaxProperties={tvParallaxProperties}
       />
       
       {/* Up Next overlay */}

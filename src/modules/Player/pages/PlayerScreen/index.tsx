@@ -61,7 +61,10 @@ const PlayerScreen: React.FC<Props> = ({ route, navigation }) => {
                 <VideoPlayer ref={VideoPlayerRef} 
                 style={{aspectRatio: 16/9, width: '80%' , alignSelf: 'center' , padding: theme.scale(15)}}
                 videoURL={'https://flipfit-cdn.akamaized.net/flip_hls/662aae7a42cd740019b91dec-3e114f/video_h1.m3u8'} 
-                resizeMode='contain'>
+                resizeMode='contain'
+                accessible={true}
+                hasTVPreferredFocus
+                >
                     <UpNextPreview
                       title="Next Episode: Memoirs of Aratrika"
                       episodeInfo="S1 E2"

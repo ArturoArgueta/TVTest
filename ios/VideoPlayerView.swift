@@ -10,19 +10,141 @@ class VideoPlayerView: UIView {
     private var _videoGravity: AVLayerVideoGravity = .resizeAspectFill
     private var _borderRadius: CGFloat = 0
     private var overlayContainer: UIView?
+    private var playerViewController: AVPlayerViewController?
+    private var useNativeControls: Bool = false
+    private var timeObserver: Any?
+    private var statusObserver: NSKeyValueObservation?
+    
+    @objc var onProgress: RCTDirectEventBlock?
+    @objc var onEnd: RCTDirectEventBlock?
+    @objc var onLoad: RCTDirectEventBlock?
+    @objc var onError: RCTDirectEventBlock?
     
     override init(frame: CGRect) {
         super.init(frame: frame)
         backgroundColor = .black
-        setupPlayerLayer()
+        
+        // Use native controls automatically on tvOS
+        #if os(tvOS)
+        useNativeControls = true
+        #endif
+        
+        setupPlayer()
         setupOverlayContainer()
+        setupGestureRecognizers()
     }
     
     required init?(coder: NSCoder) {
         super.init(coder: coder)
-        setupPlayerLayer()
+        
+        // Use native controls automatically on tvOS
+        #if os(tvOS)
+        useNativeControls = true
+        #endif
+        
+        setupPlayer()
         setupOverlayContainer()
+        setupGestureRecognizers()
     }
+    
+    private func setupPlayer() {
+        if player == nil {
+            player = AVPlayer()
+        }
+        
+        if useNativeControls {
+            setupPlayerViewController()
+        } else {
+            setupPlayerLayer()
+        }
+    }
+    
+    private func setupPlayerViewController() {
+        // Remove player layer if it exists
+        avPlayerLayer?.removeFromSuperlayer()
+        avPlayerLayer = nil
+        
+        // Create AVPlayerViewController if needed
+        if playerViewController == nil {
+            let controller = AVPlayerViewController()
+            controller.showsPlaybackControls = true
+            controller.player = player
+            
+            // Configure view
+            if let playerView = controller.view {
+                playerView.frame = bounds
+                playerView.autoresizingMask = [.flexibleWidth, .flexibleHeight]
+                
+                // Add to view hierarchy
+                addSubview(playerView)
+                
+                // Log for debugging
+                print("Added AVPlayerViewController view to hierarchy, bounds:", bounds)
+            }
+            
+            playerViewController = controller
+        }
+        
+        // Apply corner radius if needed
+        if _borderRadius > 0 {
+            playerViewController?.view.layer.cornerRadius = _borderRadius
+            playerViewController?.view.layer.masksToBounds = true
+        }
+    }
+    
+    private func setupPlayerLayer() {
+        // Clean up player view controller if it exists
+        playerViewController?.view.removeFromSuperview()
+        playerViewController?.player = nil
+        playerViewController = nil
+        
+        // Create and configure AVPlayerLayer
+        let playerLayer = AVPlayerLayer(player: player)
+        playerLayer.videoGravity = _videoGravity
+        playerLayer.frame = bounds
+        
+        // Add it to the view's layer
+        layer.addSublayer(playerLayer)
+        avPlayerLayer = playerLayer
+        
+        // Apply corner radius if needed
+        if _borderRadius > 0 {
+            layer.cornerRadius = _borderRadius
+            layer.masksToBounds = true
+        }
+    }
+    
+    private func setupGestureRecognizers() {
+        #if os(tvOS)
+        // For tvOS, add a tap gesture recognizer to show/hide controls
+        let tapRecognizer = UITapGestureRecognizer(target: self, action: #selector(handleTap))
+        tapRecognizer.allowedPressTypes = [NSNumber(value: UIPress.PressType.select.rawValue)]
+        addGestureRecognizer(tapRecognizer)
+        
+        // Add a gesture recognizer for play/pause
+        let playPauseRecognizer = UITapGestureRecognizer(target: self, action: #selector(handlePlayPause))
+        playPauseRecognizer.allowedPressTypes = [NSNumber(value: UIPress.PressType.playPause.rawValue)]
+        addGestureRecognizer(playPauseRecognizer)
+        #endif
+    }
+    
+    #if os(tvOS)
+    @objc func handleTap(_ recognizer: UITapGestureRecognizer) {
+        if useNativeControls {
+            playerViewController?.showsPlaybackControls.toggle()
+        }
+    }
+    
+    @objc func handlePlayPause(_ recognizer: UITapGestureRecognizer) {
+        if let player = player {
+            if player.timeControlStatus == .playing {
+                player.pause()
+            } else {
+                player.play()
+            }
+        }
+    }
+    #endif
     
     private func setupOverlayContainer() {
         // Create overlay container
@@ -33,9 +155,14 @@ class VideoPlayerView: UIView {
         
         addSubview(container)
         overlayContainer = container
+        
+        // Ensure overlay is on top
+        if let playerView = playerViewController?.view, playerView.superview == self {
+            bringSubviewToFront(container)
+        }
     }
     
-  @objc override func insertReactSubview(_ subview: UIView!, at atIndex: Int) {
+    @objc override func insertReactSubview(_ subview: UIView!, at atIndex: Int) {
         if atIndex == 0 {
             // First subview is treated as the video player content
             super.insertSubview(subview, at: 0)
@@ -51,8 +178,15 @@ class VideoPlayerView: UIView {
         }
         set {
             _borderRadius = newValue
-            layer.cornerRadius = newValue
-            layer.masksToBounds = newValue > 0
+            
+            if useNativeControls {
+                playerViewController?.view.layer.cornerRadius = newValue
+                playerViewController?.view.layer.masksToBounds = newValue > 0
+            } else {
+                layer.cornerRadius = newValue
+                layer.masksToBounds = newValue > 0
+            }
+            
             print("Border radius set to:", newValue)
         }
     }
@@ -87,33 +221,6 @@ class VideoPlayerView: UIView {
         }
     }
     
-    private func setupPlayerLayer() {
-        // Remove existing layer if any
-        avPlayerLayer?.removeFromSuperlayer()
-        
-        // Create new player if needed
-        if player == nil {
-            player = AVPlayer()
-        }
-        
-        // Create and configure AVPlayerLayer
-        let playerLayer = AVPlayerLayer(player: player)
-        playerLayer.videoGravity = _videoGravity
-        playerLayer.frame = bounds
-        
-        // Add it to the view's layer
-        layer.addSublayer(playerLayer)
-        avPlayerLayer = playerLayer
-        
-        // Apply existing border radius if set
-        if _borderRadius > 0 {
-            layer.cornerRadius = _borderRadius
-            layer.masksToBounds = true
-        }
-        
-        print("Player layer setup complete - frame:", bounds)
-    }
-    
     @objc var videoURL: String = "" {
         didSet {
             print("Video URL changed to:", videoURL)
@@ -131,50 +238,105 @@ class VideoPlayerView: UIView {
     }
     
     private func setupAVPlayer(url: URL) {
+        // Remove existing time observer
+        if let observer = timeObserver {
+            player?.removeTimeObserver(observer)
+            timeObserver = nil
+        }
+        
+        // Remove existing item observers
+        if let observer = statusObserver {
+            observer.invalidate()
+            statusObserver = nil
+        }
+        
         let asset = AVAsset(url: url)
         let playerItem = AVPlayerItem(asset: asset)
         
-        // If player already exists, just replace item
-        if let existingPlayer = player {
-            existingPlayer.replaceCurrentItem(with: playerItem)
-        } else {
-            player = AVPlayer(playerItem: playerItem)
-            // Update the player on the layer
-            avPlayerLayer?.player = player
-        }
-        
         // Add observer for player item status
-        playerItem.addObserver(self, forKeyPath: "status", options: [.new, .old], context: nil)
-        
-        print("AVPlayer setup complete")
-    }
-    
-    override func layoutSubviews() {
-        super.layoutSubviews()
-        print("layoutSubviews called - new bounds:", bounds)
-        // Update player layer frame when view size changes
-        CATransaction.begin()
-        CATransaction.setDisableActions(true)
-        avPlayerLayer?.frame = self.bounds
-        overlayContainer?.frame = self.bounds
-        CATransaction.commit()
-    }
-    
-    override func observeValue(forKeyPath keyPath: String?, of object: Any?, change: [NSKeyValueChangeKey : Any]?, context: UnsafeMutableRawPointer?) {
-        if keyPath == "status", let playerItem = object as? AVPlayerItem {
+        statusObserver = playerItem.observe(\.status, options: [.new, .old]) { [weak self] (item, change) in
+            guard let self = self else { return }
             DispatchQueue.main.async {
-                switch playerItem.status {
+                switch item.status {
                 case .readyToPlay:
-                    print("Player is ready to play - layer frame:", self.avPlayerLayer?.frame ?? CGRect.zero)
-                    // Don't auto-play, let the user control this
+                    print("Player is ready to play")
+                    if let duration = self.player?.currentItem?.duration.seconds, !duration.isNaN {
+                        self.onLoad?(["duration": duration])
+                    }
                 case .failed:
-                    print("Player failed:", playerItem.error?.localizedDescription ?? "unknown error")
+                    print("Player failed:", item.error?.localizedDescription ?? "unknown error")
+                    if let error = item.error {
+                        self.onError?(["error": error.localizedDescription])
+                    }
                 case .unknown:
                     print("Player status unknown")
                 @unknown default:
                     break
                 }
             }
+        }
+        
+        // Add end of playback observer
+        NotificationCenter.default.addObserver(
+            self,
+            selector: #selector(playerItemDidReachEnd),
+            name: .AVPlayerItemDidPlayToEndTime,
+            object: playerItem
+        )
+        
+        // If player already exists, just replace item
+        if let existingPlayer = player {
+            existingPlayer.replaceCurrentItem(with: playerItem)
+        } else {
+            player = AVPlayer(playerItem: playerItem)
+            // Update the player on the layer or view controller
+            if useNativeControls {
+                playerViewController?.player = player
+            } else {
+                avPlayerLayer?.player = player
+            }
+        }
+        
+        // Add periodic time observer for progress updates
+        let interval = CMTime(seconds: 0.5, preferredTimescale: CMTimeScale(NSEC_PER_SEC))
+        timeObserver = player?.addPeriodicTimeObserver(forInterval: interval, queue: DispatchQueue.main) { [weak self] time in
+            guard let self = self else { return }
+            
+            let currentTime = time.seconds
+            // Check if currentTime is NaN
+            if currentTime.isNaN { return }
+            
+          
+            guard let duration = self.player?.currentItem?.duration.seconds, !duration.isNaN else {
+                return
+            }
+            
+            self.onProgress?(["currentTime": currentTime, "duration": duration])
+        }
+    }
+    
+    @objc func playerItemDidReachEnd(notification: Notification) {
+        onEnd?([:])
+    }
+    
+    override func layoutSubviews() {
+        super.layoutSubviews()
+        
+        CATransaction.begin()
+        CATransaction.setDisableActions(true)
+        
+        if useNativeControls {
+            playerViewController?.view.frame = bounds
+        } else {
+            avPlayerLayer?.frame = bounds
+        }
+        
+        overlayContainer?.frame = bounds
+        CATransaction.commit()
+        
+        // Make sure overlay is always on top
+        if let container = overlayContainer {
+            bringSubviewToFront(container)
         }
     }
     
@@ -194,10 +356,32 @@ class VideoPlayerView: UIView {
     }
     
     deinit {
-        if let playerItem = player?.currentItem {
-            playerItem.removeObserver(self, forKeyPath: "status")
+        if let observer = timeObserver {
+            player?.removeTimeObserver(observer)
         }
+        
+        if let observer = statusObserver {
+            observer.invalidate()
+        }
+        
+        NotificationCenter.default.removeObserver(self)
         player?.pause()
         player = nil
     }
+    
+    #if os(tvOS)
+    // MARK: - tvOS Focus Properties
+    override var canBecomeFocused: Bool {
+        return true
+    }
+    
+    // Preferred focus environment
+    override var preferredFocusEnvironments: [UIFocusEnvironment] {
+        if let playerViewController = playerViewController {
+            // When using the view controller, prefer to focus its view for better control handling
+            return [playerViewController]
+        }
+        return [self]
+    }
+    #endif
 }
