@@ -54,7 +54,9 @@ const PlayerScreen: React.FC<Props> = ({ route, navigation }) => {
 
     return (
         <>
-            <ButtonContainer onPress={handleBack}>
+            <ButtonContainer onPress={handleBack} 
+            focusable={true}
+            accessible={true}>
                 <BackArrow />
             </ButtonContainer>
             
